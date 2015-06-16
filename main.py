@@ -54,7 +54,6 @@ class SimulationInstance(object):
 
 
     def sampleTwo_players(self):
-        random.shuffle(self.playersList)
         players = random.sample(self.playersList,2)
         return players
 
