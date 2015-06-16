@@ -22,7 +22,7 @@ class Player(object):
         self.conditional_coordinationProb = np.zeros(len(self.strategies), dtype=float)
 
     # compute the conditional probability of coordinating by playing a given strategy s
-    def compute_prob_strategy(self, s):
+    def compute_prob_strategy(self, int s):
         """ P(c|s)=P(s|c)*P(c)/P(s) """
 
         # P(c)
