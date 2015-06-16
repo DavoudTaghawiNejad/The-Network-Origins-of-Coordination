@@ -1,11 +1,12 @@
 
+# cython: profile=True
 from __future__ import division
 import random
 import parameters as parameters
-
+import numpy as np
 # create a class of players
 
-class player(object):
+class Player(object):
     def __init__(self):
         # set of strategies to choose from
         self.strategies = []
@@ -73,10 +74,9 @@ class player(object):
 
     # a player can return a move
     def compute_conditional_probabilities(self):
-        self.conditional_coordinationProb = [0.0] * len(self.strategies)
+        self.conditional_coordinationProb = np.empty(len(self.strategies), dtype=float)
         for s in self.strategies:
-            p = self.compute_prob_strategy(s)
-            self.conditional_coordinationProb[s] = p
+            self.conditional_coordinationProb[s] = self.compute_prob_strategy(s)
 
     def returnMove(self):
         m = max(self.conditional_coordinationProb)
