@@ -5,8 +5,15 @@ import random
 import parameters as parameters
 # create a class of players
 
-class Player(object):
-    def __init__(self):
+cdef class Player(object):
+    cdef public object strategies
+    cdef object lastMove
+    cdef object lastResult
+    cdef object neighborsStates
+    cdef object conditional_coordinationProb
+    cdef public int numberNeighbors
+
+    def __cinit__(self):
         # set of strategies to choose from
         self.strategies = []
         # two state variables: last move and last result
@@ -21,7 +28,8 @@ class Player(object):
         self.conditional_coordinationProb = [0.0] * len(self.strategies)
 
     # compute the conditional probability of coordinating by playing a given strategy s
-    def compute_prob_strategy(self, int s):
+
+    cdef float compute_prob_strategy(self, int s):
         """ P(c|s)=P(s|c)*P(c)/P(s) """
 
         # P(c)
@@ -48,12 +56,9 @@ class Player(object):
         prob_S = total_neigh_S / numberNeighbors
 
         # P(s|c)
-        cdef int temp
+        cdef int temp = 0
         cdef float prob_S_given_C
         cdef float prob_C_given_S
-
-
-        temp = 0
 
         for i in self.neighborsStates:
             if i[1] == 1 and i[0] == s:
