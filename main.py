@@ -58,13 +58,10 @@ class SimulationInstance(object):
         return players
 
     def communicate(self, players):
-        for i in players:
-            neighbors = self.playerNetwork.neighbors(i)
-            neighborsStates = []
-            for j in neighbors:
-                state = j.returnState()
-                neighborsStates.append(state)
-            i.update_neighborsStates(neighborsStates)
+        for player in players:
+            neighbors = self.playerNetwork.neighbors(player)
+            neighborsStates = [neighbor.returnState() for neighbor in neighbors]
+            player.update_neighborsStates(neighborsStates)
 
     def compute(self,players):
         for i in players:

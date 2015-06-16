@@ -3,7 +3,6 @@
 from __future__ import division
 import random
 import parameters as parameters
-import numpy as np
 # create a class of players
 
 class Player(object):
@@ -19,7 +18,7 @@ class Player(object):
         self.numberNeighbors = 0 ## needs to be cdef
 
         # a list of probabilities of coordination associated with each strategy
-        self.conditional_coordinationProb = np.zeros(len(self.strategies), dtype=float)
+        self.conditional_coordinationProb = [0.0] * len(self.strategies)
 
     # compute the conditional probability of coordinating by playing a given strategy s
     def compute_prob_strategy(self, int s):
@@ -74,9 +73,7 @@ class Player(object):
 
     # a player can return a move
     def compute_conditional_probabilities(self):
-        self.conditional_coordinationProb = np.empty(len(self.strategies), dtype=float)
-        for s in self.strategies:
-            self.conditional_coordinationProb[s] = self.compute_prob_strategy(s)
+        self.conditional_coordinationProb = [self.compute_prob_strategy(s) for s in self.strategies]
 
     def returnMove(self):
         m = max(self.conditional_coordinationProb)
