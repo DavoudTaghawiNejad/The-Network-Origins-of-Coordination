@@ -7,8 +7,8 @@ import parameters as parameters
 
 cdef class Player(object):
     cdef public object strategies
-    cdef object lastMove
-    cdef object lastResult
+    cdef int lastMove
+    cdef int lastResult
     cdef object neighborsStates
     cdef object conditional_coordinationProb
     cdef public int numberNeighbors
