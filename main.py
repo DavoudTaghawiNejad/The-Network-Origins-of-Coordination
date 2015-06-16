@@ -31,7 +31,7 @@ class SimulationInstance(object):
 
 
     def createPlayers_list(self):
-        self.playersList = [players.Player() for count in xrange(self.numPlayers)]
+        self.playersList = [players.Player() for count in range(self.numPlayers)]
 
     def assignAttributes(self):
         strategies = range(0, self.numStrategies)
@@ -54,10 +54,10 @@ class SimulationInstance(object):
 
 
     def sampleTwo_players(self):
-        players = random.sample(self.playersList,2)
+        players = random.sample(self.playersList, 2)
         return players
 
-    def communicate(self,players):
+    def communicate(self, players):
         for i in players:
             neighbors = self.playerNetwork.neighbors(i)
             neighborsStates = []
@@ -79,10 +79,10 @@ class SimulationInstance(object):
 
 
     def play(self):
-        players=self.sampleTwo_players()
+        players = self.sampleTwo_players()
         self.communicate(players)
         self.compute(players)
-        moves=self.returnMoves(players)
+        moves = self.returnMoves(players)
 
         if moves[0]==moves[1]:
             players[0].updateResult(1)
@@ -91,8 +91,9 @@ class SimulationInstance(object):
             players[0].updateResult(0)
             players[1].updateResult(0)
 
-	#this part of the code is definately doing too much work because all we want to know if all agents have the same state
-	# as soon as we find two agents don't have same state we can exit , and keep running the code
+	# this part of the code is definitely doing too much work because
+    # all we want to know if all agents have the same state
+	# as soon as we find two agents don't have same state we can exit, and keep running the code
     def compute_stateNetwork(self):
         states = [0] * self.numStrategies
         for i in self.playersList:
