@@ -12,7 +12,7 @@ import scipy.stats
 import csv
 
 
-class do(object):
+class SimulationInstance(object):
     def __init__(self):
         self.timeSteps = parameters.timeSteps
         self.numStrategies = parameters.numStrategies
@@ -25,16 +25,16 @@ class do(object):
         self.WattsStrogatz_rewiringProb = parameters.WattsStrogatz_rewiringProb
         self.systemState_measure_frequency = parameters.measureSystem_state_frequency
         self.convergence_sequence = []
-        self.networkState=False
-        self.timeSteps_to_convergence=[]
-        self.numGames=parameters.numGames
+        self.networkState = False
+        self.timeSteps_to_convergence = []
+        self.numGames = parameters.numGames
 
 
     def createPlayers_list(self):
-        self.playersList = [players.player() for count in xrange(self.numPlayers)]
+        self.playersList = [players.Player() for count in xrange(self.numPlayers)]
 
     def assignAttributes(self):
-        strategies = list(range(0, self.numStrategies))
+        strategies = range(0, self.numStrategies)
         for i in self.playersList:
             i.strategies = strategies
 
@@ -55,7 +55,7 @@ class do(object):
 
     def sampleTwo_players(self):
         random.shuffle(self.playersList)
-        players=random.sample(self.playersList,2)
+        players = random.sample(self.playersList,2)
         return players
 
     def communicate(self,players):
@@ -124,13 +124,12 @@ class do(object):
         self.createPlayers_list()
         self.assignAttributes()
         self.createNetwork()
-        self.networkState = 0
-        self.networkState=False
+        self.networkState = False
 
         for i in range(self.timeSteps):
              if self.networkState is False:
                  self.play()
-                 if i % self.systemState_measure_frequency == 0 and i<(self.timeSteps-1):
+                 if i % self.systemState_measure_frequency == 0 and i < (self.timeSteps - 1):
                      #state=self.playersList[0].returnState()[0]
                      #self.networkState=self.checkNetwork_convergence(state,0)
                      self.compute_stateNetwork()
@@ -153,20 +152,20 @@ class do(object):
 #plt.show()
 
 
-class parameter_sweep(object):
-    incrementPlayers=100
-    range_players=np.arange(90,91,incrementPlayers)
-    with open('data19.csv','wb') as csvfile:
-        for player in range_players:
-            print('players',player)
-            simulation_instance=do()
-            simulation_instance.numPlayers=player
+class ParameterSweep(object):
+    incrementPlayers = 100
+    range_players = np.arange(90, 91, incrementPlayers)
+    with open('data19.csv', 'wb') as csvfile:
+        for num_player in range_players:
+            print('players', num_player)
+            simulation_instance = SimulationInstance()
+            simulation_instance.numPlayers = num_player
             simulation_instance.games()
-            mean=np.mean(simulation_instance.timeSteps_to_convergence)
-            var=scipy.stats.variation(simulation_instance.timeSteps_to_convergence)
-            writer=csv.writer(csvfile,delimiter=',')
-            writer.writerow([player]+[mean]+[var])
-    print 'done'
+            mean = np.mean(simulation_instance.timeSteps_to_convergence)
+            var = scipy.stats.variation(simulation_instance.timeSteps_to_convergence)
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow([num_player, mean, var])
+    print('done')
 
 
-parameter_sweep()
+ParameterSweep()
