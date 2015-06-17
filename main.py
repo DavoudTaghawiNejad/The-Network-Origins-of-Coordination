@@ -6,7 +6,6 @@ import players
 import random
 import matplotlib.pyplot as plt
 import networkx as nx
-import copy
 import numpy as np
 import scipy.stats
 import csv
