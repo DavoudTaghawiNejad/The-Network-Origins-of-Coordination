@@ -74,7 +74,7 @@ class SeriesInstance(object):
         """ makes the players move and returns it  """
         return [player.move() for player in players]
 
-    def play(self):
+    def one_round(self):
         """ plays one round """
         players = self.sampleTwo_players()
         self.communicate(players)
