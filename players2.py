@@ -22,47 +22,35 @@ class player(object):
 
     # compute the conditional probability of coordinating by playing a given strategy s
     def compute_prob_strategy(self, s):
-        # P(c|s)=P(s|c)*P(c)/P(s)
-        # P(c)
-        total_coordinations = 0
-        for i in self.neighborsStates:
-            if i[1] == 1:
-                total_coordinations += 1
-
-        prob_C = total_coordinations / self.numberNeighbors
-
-
-        # P(s)
+		# P(s)
         total_neigh_S = 0
         for i in self.neighborsStates:
             if i[0] == s:
                 total_neigh_S += 1
+        if total_neigh_S!=0:
+            prob_S = total_neigh_S / self.numberNeighbors
 
-        prob_S = total_neigh_S / self.numberNeighbors
-
-        # P(s|c)
-        temp = 0
-
-        for i in self.neighborsStates:
-            if i[1] == 1 and i[0] == s:
-                temp += 1
-
-        if total_coordinations != 0:
-            prob_S_given_C = temp / total_coordinations
-        else:
             prob_S_given_C = 0
 
-        if prob_S != 0:
-            prob_C_given_S = prob_S_given_C * prob_C / prob_S
-        else:
-            prob_C_given_S = 0
+            for i in self.neighborsStates:
+                if i[1] == 1 and i[0] == s:
+                    prob_S_given_C += 1
 
-        return prob_C_given_S
+            prob_C_given_S = prob_S_given_C / prob_S
+
+            return prob_C_given_S
+
+        else:
+            return 0
+
+
+
 
     # a player can return a move
     def compute_conditional_probabilities(self):
         self.conditional_coordinationProb = [0.0] * len(self.strategies)
         for s in self.strategies:
+			
             p = self.compute_prob_strategy(s)
             self.conditional_coordinationProb[s] = p
 
