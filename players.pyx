@@ -6,7 +6,7 @@ import parameters as parameters
 
 cdef class Player(object):
     cdef public object strategies
-    cdef int lastMove
+    cdef public int lastMove
     cdef int lastResult
     cdef object neighborsStates
     cdef object conditional_coordinationProb
@@ -59,7 +59,7 @@ cdef class Player(object):
     def compute_conditional_probabilities(self):
         self.conditional_coordinationProb = [self.compute_prob_strategy(s) for s in self.strategies]
 
-    def returnMove(self):
+    def move(self):
         cdef int move
         m = max(self.conditional_coordinationProb)
         moves = [i for i, x in enumerate(self.conditional_coordinationProb) if x == m]
