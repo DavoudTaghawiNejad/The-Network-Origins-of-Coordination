@@ -69,18 +69,17 @@ class SeriesInstance(object):
         for player in players:
             player.compute_conditional_probabilities()
 
-    def returnMoves(self,players):
-        moves=[]
-        for i in players:
-            moves.append(i.returnMove())
-        return moves
+    def moves(self, players):  # I renamed it to move as it does not only return the move,
+                               # but actually execute the move
+        """ makes the players move and returns it  """
+        return [player.move() for player in players]
 
     def play(self):
         """ plays one round """
         players = self.sampleTwo_players()
         self.communicate(players)
         self.compute(players)
-        moves = self.returnMoves(players)
+        moves = self.moves(players)
 
         if moves[0]==moves[1]:
             players[0].updateResult(1)
