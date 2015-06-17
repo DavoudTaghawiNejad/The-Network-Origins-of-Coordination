@@ -10,9 +10,6 @@ numPlayers=100
 #number of strategies
 numStrategies=100
 
-#how often to measure system state
-measureSystem_state_frequency=100
-
 #mean degree
 meanDegree=2
 
