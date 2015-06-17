@@ -61,13 +61,14 @@ cdef class Player(object):
         self.conditional_coordinationProb = [self.compute_prob_strategy(s) for s in self.strategies]
 
     def returnMove(self):
+        cdef int move
         m = max(self.conditional_coordinationProb)
         moves = [i for i, x in enumerate(self.conditional_coordinationProb) if x == m]
         move = random.choice(moves)
         self.lastMove = move
         return move
 
-    def updateResult(self, result):
+    def updateResult(self, int result):
         self.lastResult = result
 
     def update_neighborsStates(self, states):
