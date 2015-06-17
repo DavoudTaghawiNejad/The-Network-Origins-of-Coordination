@@ -22,14 +22,14 @@ cdef class Player(object):
         # the states of neighbors
         # this list will be populated with tuples where fist element is the strategy, second element is outcome
         self.neighborsStates = []
-        self.numberNeighbors = 0 ## needs to be cdef
+        self.numberNeighbors = 0
 
         # a list of probabilities of coordination associated with each strategy
         self.conditional_coordinationProb = [0.0] * len(self.strategies)
 
     # compute the conditional probability of coordinating by playing a given strategy s
 
-    cdef compute_prob_strategy(self, ints):
+    cdef compute_prob_strategy(self, int s):
         # P(s)
         cdef int total_neigh_S = 0
         cdef float prob_S
@@ -48,6 +48,8 @@ cdef class Player(object):
             for i in self.neighborsStates:
                 if i[1] == 1 and i[0] == s:
                     prob_S_given_C += 1
+
+            prob_C_given_S = prob_S_given_C / prob_S
 
             return prob_C_given_S
 
