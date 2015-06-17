@@ -94,6 +94,7 @@ class SeriesInstance(object):
         for player in self.playersList:
             if player.lastMove != move:
                 return False
+        return True
 
     def game(self):
         """ creates the players, strategies and network; runs the simulation until convergence
