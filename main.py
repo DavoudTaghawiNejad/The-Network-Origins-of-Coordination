@@ -21,11 +21,11 @@ class SeriesInstance(object):
         self.meanDegree = parameters.meanDegree
         self.playerNetwork = 0
         self.WattsStrogatz_rewiringProb = parameters.WattsStrogatz_rewiringProb
-        self.systemState_measure_frequency = parameters.measureSystem_state_frequency
         self.convergence_sequence = []
         self.networkState = False
         self.timeSteps_to_convergence = []
         self.numGames = parameters.numGames
+        self.number_of_non_convergences = 0
 
 
     def createPlayers_list(self):
@@ -126,16 +126,11 @@ class SeriesInstance(object):
         self.networkState = False
 
         for i in range(self.timeSteps):
-             if self.networkState is False:
-                 self.play()
-                 if i % self.systemState_measure_frequency == 0 and i < (self.timeSteps - 1):
-                     #state=self.playersList[0].returnState()[0]
-                     #self.networkState=self.checkNetwork_convergence(state,0)
-                     self.compute_stateNetwork()
-                     if self.networkState is True:
-                         self.timeSteps_to_convergence.append(i)
-                 elif i==(self.timeSteps-1):
-                    self.timeSteps_to_convergence.append(False)
+             self.one_round()
+             if self.is_converged():
+                 self.timeSteps_to_convergence.append(i)
+                 return
+        self.number_of_non_convergences += 1
 
     def series_with_same_parameter(self):
         """ runs the game self.numGames times """
@@ -155,7 +150,7 @@ class ParameterSweep(object):
             mean = np.mean(series_instance.timeSteps_to_convergence)
             var = np.std(series_instance.timeSteps_to_convergence)
             writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow([num_player, mean, var])
+            writer.writerow([num_player, mean, var, series_instance.number_of_non_convergences])
     print('done')
 
 
