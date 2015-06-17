@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import csv
+import sys
 
 
 class SeriesInstance(object):
@@ -51,42 +52,28 @@ class SeriesInstance(object):
         for player in self.playersList:
             player.numberNeighbors = len(self.playerNetwork.neighbors(player))
 
+    def collect_neighbor_states(self, player):
+        """ each of the two players collects the states of his neighbors """
+        neighbors = self.playerNetwork.neighbors(player)
+        neighborsStates = [neighbor.returnState() for neighbor in neighbors]
+        player.update_neighborsStates(neighborsStates)
 
-    def sampleTwo_players(self):
-        """ returns two random players """
-        players = random.sample(self.playersList, 2)
-        return players
-
-    def communicate(self, players):
-        """ each of the (two) players in players gets to negotiate with its neighbors """
-        for player in players:
-            neighbors = self.playerNetwork.neighbors(player)
-            neighborsStates = [neighbor.returnState() for neighbor in neighbors]
-            player.update_neighborsStates(neighborsStates)
-
-    def compute(self, players):
-        """ compute conditional probabilities """
-        for player in players:
-            player.compute_conditional_probabilities()
-
-    def moves(self, players):  # I renamed it to move as it does not only return the move,
-                               # but actually execute the move
-        """ makes the players move and returns it  """
-        return [player.move() for player in players]
-
-    def one_round(self):
+    def one_round(self, player):
         """ plays one round """
-        players = self.sampleTwo_players()
-        self.communicate(players)
-        self.compute(players)
-        moves = self.moves(players)
+        playerA = self.playersList[player]
+        playerB = random.sample(self.playersList, 1)[0]
+        self.collect_neighbor_states(playerA)
+        self.collect_neighbor_states(playerB)
+        playerA.compute_conditional_probabilities()
+        playerB.compute_conditional_probabilities()
 
-        if moves[0]==moves[1]:
-            players[0].updateResult(1)
-            players[1].updateResult(1)
+
+        if playerA.move() == playerB.move():
+            playerA.updateResult(1)
+            playerB.updateResult(1)
         else:
-            players[0].updateResult(0)
-            players[1].updateResult(0)
+            playerA.updateResult(0)
+            playerB.updateResult(0)
 
     def is_converged(self):
         """ tests whether all players have the same state """
@@ -104,22 +91,26 @@ class SeriesInstance(object):
         self.createNetwork()
         self.networkState = False
 
+        player = 0
         for i in range(self.timeSteps):
-             self.one_round()
-             if self.is_converged():
-                 self.timeSteps_to_convergence.append(i)
-                 return
+            self.one_round(player)
+            if self.is_converged():
+                self.timeSteps_to_convergence.append(i)
+                return
+            player += 1
+            if player == len(self.playersList):
+                player = 0
+                random.shuffle(self.playersList)
         self.number_of_non_convergences += 1
 
     def series_with_same_parameter(self):
         """ runs the game self.numGames times """
-        for i in range(self.numGames):
+        for _ in range(self.numGames):
             self.game()
 
 
 class ParameterSweep(object):
-    incrementPlayers = 100
-    range_players = np.arange(90, 91, incrementPlayers)
+    range_players = np.arange(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
     with open('data.csv', 'wb') as csvfile:
         for num_player in range_players:
             print('players', num_player)
