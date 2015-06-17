@@ -30,14 +30,18 @@ class SimulationInstance(object):
 
 
     def createPlayers_list(self):
+        """ creates players """
         self.playersList = [players.Player() for count in range(self.numPlayers)]
 
     def assignAttributes(self):
+        """ every agent gets a number of options, to choose his nash strategy from """
         strategies = range(0, self.numStrategies)
         for i in self.playersList:
             i.strategies = strategies
 
     def createNetwork(self):
+        """ self.playerNetwork, is a network of players, which refer to Player instances
+            every agent gets the number of his agents """
         mapping = dict(enumerate(self.playersList))
 
         if self.networkType == 'scaleFree':
@@ -50,10 +54,12 @@ class SimulationInstance(object):
 
 
     def sampleTwo_players(self):
+        """ returns two random players """
         players = random.sample(self.playersList, 2)
         return players
 
     def communicate(self, players):
+        """ each of the (two) players in players gets to negotiate with its neighbors """
         for player in players:
             neighbors = self.playerNetwork.neighbors(player)
             neighborsStates = [neighbor.returnState() for neighbor in neighbors]
@@ -70,6 +76,7 @@ class SimulationInstance(object):
         return moves
 
     def play(self):
+        """ plays one round """
         players = self.sampleTwo_players()
         self.communicate(players)
         self.compute(players)
@@ -112,6 +119,8 @@ class SimulationInstance(object):
                 return False
 
     def game(self):
+        """ creates the players, strategies and network; runs the simulation until convergence
+            is achieved; time of convergence or in case of non-convergence False is appended """
         self.createPlayers_list()
         self.assignAttributes()
         self.createNetwork()
@@ -134,19 +143,10 @@ class SimulationInstance(object):
             self.game()
 
 
-
-#instanceDo = do()
-#instanceDo.games()
-
-
-#plt.plot(instanceDo.timeSteps_to_convergence)
-#plt.show()
-
-
 class ParameterSweep(object):
     incrementPlayers = 100
     range_players = np.arange(90, 91, incrementPlayers)
-    with open('data19.csv', 'wb') as csvfile:
+    with open('data.csv', 'wb') as csvfile:
         for num_player in range_players:
             print('players', num_player)
             simulation_instance = SimulationInstance()
