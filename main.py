@@ -7,11 +7,10 @@ import random
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-import scipy.stats
 import csv
 
 
-class SimulationInstance(object):
+class SeriesInstance(object):
     def __init__(self):
         self.timeSteps = parameters.timeSteps
         self.numStrategies = parameters.numStrategies
@@ -138,7 +137,8 @@ class SimulationInstance(object):
                  elif i==(self.timeSteps-1):
                     self.timeSteps_to_convergence.append(False)
 
-    def games(self):
+    def series_with_same_parameter(self):
+        """ runs the game self.numGames times """
         for i in range(self.numGames):
             self.game()
 
@@ -149,11 +149,11 @@ class ParameterSweep(object):
     with open('data.csv', 'wb') as csvfile:
         for num_player in range_players:
             print('players', num_player)
-            simulation_instance = SimulationInstance()
-            simulation_instance.numPlayers = num_player
-            simulation_instance.games()
-            mean = np.mean(simulation_instance.timeSteps_to_convergence)
-            var = scipy.stats.variation(simulation_instance.timeSteps_to_convergence)
+            series_instance = SeriesInstance()
+            series_instance.numPlayers = num_player
+            series_instance.series_with_same_parameter()
+            mean = np.mean(series_instance.timeSteps_to_convergence)
+            var = np.std(series_instance.timeSteps_to_convergence)
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow([num_player, mean, var])
     print('done')
