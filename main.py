@@ -35,8 +35,8 @@ class SeriesInstance(object):
     def assignAttributes(self):
         """ every agent gets a number of options, to choose his nash strategy from """
         strategies = range(0, self.numStrategies)
-        for i in self.playersList:
-            i.strategies = strategies
+        for player in self.playersList:
+            player.strategies = strategies
 
     def createNetwork(self):
         """ self.playerNetwork, is a network of players, which refer to Player instances
@@ -64,9 +64,10 @@ class SeriesInstance(object):
             neighborsStates = [neighbor.returnState() for neighbor in neighbors]
             player.update_neighborsStates(neighborsStates)
 
-    def compute(self,players):
-        for i in players:
-            i.compute_conditional_probabilities()
+    def compute(self, players):
+        """ compute conditional probabilities """
+        for player in players:
+            player.compute_conditional_probabilities()
 
     def returnMoves(self,players):
         moves=[]
