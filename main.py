@@ -88,33 +88,11 @@ class SeriesInstance(object):
             players[0].updateResult(0)
             players[1].updateResult(0)
 
-	# this part of the code is definitely doing too much work because
-    # all we want to know if all agents have the same state
-	# as soon as we find two agents don't have same state we can exit, and keep running the code
-    def compute_stateNetwork(self):
-        states = [0] * self.numStrategies
-        for i in self.playersList:
-            player_state = i.returnState()[0]
-            states[player_state]+=1
-
-        states_normalized = []
-        for i in states:
-            states_normalized.append(i / self.numPlayers)
-
-        if max(states_normalized)==1:
-            self.networkState=True
-
-        #return states_normalized
-
-    def checkNetwork_convergence(self,state,count):
-        if count == (self.numPlayers):
-            return True
-        else:
-            if self.playersList[count].returnState()[0] == state:
-                count=count+1
-                return self.checkNetwork_convergence(state,count)
-            else:
-
+    def is_converged(self):
+        """ tests whether all players have the same state """
+        move = self.playersList[0].lastMove
+        for player in self.playersList:
+            if player.lastMove != move:
                 return False
 
     def game(self):
