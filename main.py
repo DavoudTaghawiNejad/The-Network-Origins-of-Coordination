@@ -2,7 +2,7 @@
 from __future__ import division
 
 import parameters
-import players2 as players
+import players
 import random
 import matplotlib.pyplot as plt
 import networkx as nx
