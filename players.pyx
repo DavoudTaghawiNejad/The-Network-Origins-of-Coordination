@@ -39,7 +39,7 @@ cdef class Player(object):
         for i in self.neighborsStates:
             if i[0] == s:
                 total_neigh_S += 1
-        if total_neigh_S!=0:
+        if total_neigh_S != 0:
             prob_S = total_neigh_S / self.numberNeighbors
 
             prob_S_given_C = 0
@@ -55,9 +55,6 @@ cdef class Player(object):
 
         else:
             return 0
-
-
-
 
     # a player can return a move
     def compute_conditional_probabilities(self):
