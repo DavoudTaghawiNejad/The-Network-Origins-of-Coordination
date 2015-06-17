@@ -39,18 +39,15 @@ class SimulationInstance(object):
             i.strategies = strategies
 
     def createNetwork(self):
-        tempList = []
-        for i in self.playersList:
-            tempList.append((self.playersList.index(i), i))
-            mapping = dict(tempList)
+        mapping = dict(enumerate(self.playersList))
 
-            if self.networkType == 'scaleFree':
-                G = nx.barabasi_albert_graph(self.numPlayers, self.meanDegree)
-                #G = nx.watts_strogatz_graph(self.numPlayers, self.meanDegree,0.5)
-                self.playerNetwork = nx.relabel_nodes(G, mapping)
+        if self.networkType == 'scaleFree':
+            G = nx.barabasi_albert_graph(self.numPlayers, self.meanDegree)
+            #G = nx.watts_strogatz_graph(self.numPlayers, self.meanDegree, 0.5)
+            self.playerNetwork = nx.relabel_nodes(G, mapping)
 
-        for i in self.playersList:
-            i.numberNeighbors = len(self.playerNetwork.neighbors(i))
+        for player in self.playersList:
+            player.numberNeighbors = len(self.playerNetwork.neighbors(player))
 
 
     def sampleTwo_players(self):
@@ -72,8 +69,6 @@ class SimulationInstance(object):
         for i in players:
             moves.append(i.returnMove())
         return moves
-
-
 
     def play(self):
         players = self.sampleTwo_players()

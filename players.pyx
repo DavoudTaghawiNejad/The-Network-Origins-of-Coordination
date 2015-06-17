@@ -1,4 +1,3 @@
-
 # cython: profile=True
 from __future__ import division
 import random
