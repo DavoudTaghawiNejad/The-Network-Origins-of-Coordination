@@ -16,7 +16,7 @@ cdef class Player(object):
         # set of strategies to choose from
         self.strategies = []
         # two state variables: last move and last result
-        self.lastMove = random.choice(xrange(parameters.numStrategies))
+        self.lastMove = random.randrange(parameters.numStrategies)
         self.lastResult = 0
         # the states of neighbors
         # this list will be populated with tuples where fist element is the strategy, second element is outcome
