@@ -44,7 +44,7 @@ cdef class Player(object):
 
             prob_S_given_C = 0
 
-        # P(s|c)
+            # P(s|c)
             for i in self.neighborsStates:
                 if i[1] == 1 and i[0] == s:
                     prob_S_given_C += 1
