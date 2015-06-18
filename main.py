@@ -110,7 +110,7 @@ class SeriesInstance(object):
 
 class ParameterSweep(object):
     range_players = np.arange(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
-    with open('data.csv', 'wb') as csvfile:
+    with open('data%s_%s_%s.csv' % (sys.argv[1], sys.argv[2], sys.argv[3]), 'wb') as csvfile:
         for num_player in range_players:
             print('players', num_player)
             series_instance = SeriesInstance()
