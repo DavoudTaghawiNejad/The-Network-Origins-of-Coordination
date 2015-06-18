@@ -4,7 +4,6 @@ from __future__ import division
 import parameters
 import players
 import random
-import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import csv
