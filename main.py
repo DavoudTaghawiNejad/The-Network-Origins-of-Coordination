@@ -119,7 +119,13 @@ class ParameterSweep(object):
             mean = np.mean(series_instance.timeSteps_to_convergence)
             var = np.std(series_instance.timeSteps_to_convergence)
             writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow([num_player, mean, var, series_instance.number_of_non_convergences])
+            writer.writerow([num_player, mean, var,
+                             series_instance.number_of_non_convergences,
+                             parameters.timeSteps,
+                             parameters.numStrategies,
+                             parameters.meanDegree,
+                             parameters.WattsStrogatz_rewiringProb,
+                             parameters.numGames])
     print('done')
 
 
