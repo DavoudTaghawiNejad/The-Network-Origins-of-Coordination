@@ -2,13 +2,8 @@
 from __future__ import division
 
 #number of time steps
-timeSteps=100000
 
-#number of players
-numPlayers=100
-
-#number of strategies
-numStrategies=100
+timeSteps=1000000
 
 #mean degree
 meanDegree=2

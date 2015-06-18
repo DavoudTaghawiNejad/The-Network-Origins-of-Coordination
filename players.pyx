@@ -1,7 +1,6 @@
 # cython: profile=True
 from __future__ import division
 import random
-import parameters as parameters
 # create a class of players
 
 cdef class Player(object):
@@ -12,11 +11,12 @@ cdef class Player(object):
     cdef object conditional_coordinationProb
     cdef public int numberNeighbors
 
-    def __cinit__(self):
+
+    def __cinit__(self, num_strategies):
         # set of strategies to choose from
         self.strategies = []
         # two state variables: last move and last result
-        self.lastMove = random.randrange(parameters.numStrategies)
+        self.lastMove = random.randrange(num_strategies)
         self.lastResult = 0
         # the states of neighbors
         # this list will be populated with tuples where fist element is the strategy, second element is outcome

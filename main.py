@@ -4,7 +4,6 @@ from __future__ import division
 import parameters
 import players
 import random
-import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import csv
@@ -12,10 +11,10 @@ import sys
 
 
 class SeriesInstance(object):
-    def __init__(self):
+    def __init__(self, num_strategies, num_players):
         self.timeSteps = parameters.timeSteps
-        self.numStrategies = parameters.numStrategies
-        self.numPlayers = parameters.numPlayers
+        self.numStrategies = num_strategies
+        self.numPlayers = num_players
         self.network = 0
         self.playersList = []
         self.networkType = 'scaleFree'
@@ -28,10 +27,10 @@ class SeriesInstance(object):
         self.numGames = parameters.numGames
         self.number_of_non_convergences = 0
 
-
     def createPlayers_list(self):
         """ creates players """
-        self.playersList = [players.Player() for count in range(self.numPlayers)]
+        self.playersList = [players.Player(self.num_strategies) for count in range(self.numPlayers)]
+
 
     def assignAttributes(self):
         """ every agent gets a number of options, to choose his nash strategy from """
@@ -103,25 +102,48 @@ class SeriesInstance(object):
                 random.shuffle(self.playersList)
         self.number_of_non_convergences += 1
 
-    def series_with_same_parameter(self):
+    def run(self):
         """ runs the game self.numGames times """
         for _ in range(self.numGames):
             self.game()
 
 
-class ParameterSweep(object):
-    range_players = np.arange(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
-    with open('data.csv', 'wb') as csvfile:
-        for num_player in range_players:
-            print('players', num_player)
-            series_instance = SeriesInstance()
-            series_instance.numPlayers = num_player
-            series_instance.series_with_same_parameter()
-            mean = np.mean(series_instance.timeSteps_to_convergence)
-            var = np.std(series_instance.timeSteps_to_convergence)
-            writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow([num_player, mean, var, series_instance.number_of_non_convergences])
+
+def parameter_sweep():
+    if sys.argv[1] == 's':
+        assert sys.argv[5] == 'p'
+        range_strategies = np.arange(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
+        range_players = [int(sys.argv[6])]
+    elif sys.argv[1] == 'p':
+        assert sys.argv[5] == 's'
+        range_players = np.arange(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
+        range_strategies = [int(sys.argv[6])]
+    else:
+        print("format python main.py s 1 100 10 p 1000")
+        print("format python main.py s from strategy to step p number of players")
+        print("format python main.py p 1 10000 100 s 100")
+        print("format python main.py p from number of players to step s number of strategies")
+        return
+
+    with open('data%s_%06d_%06d_%06d_%s_%06d.csv' % (
+               sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]),
+               sys.argv[5], int(sys.argv[6])), 'wb') as csvfile:
+        for num_players in range_players:
+            for num_strategies in range_strategies:
+                series_instance = SeriesInstance(num_strategies, num_players)
+                series_instance.run()
+                mean = np.mean(series_instance.timeSteps_to_convergence)
+                var = np.std(series_instance.timeSteps_to_convergence)
+                print('players: %d, strategies: %d, mean: %d, non convergences: %d' % (
+                    num_players, num_strategies, mean, series_instance.number_of_non_convergences))
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow([num_players, num_strategies, mean, var,
+                                 series_instance.number_of_non_convergences,
+                                 parameters.timeSteps,
+                                 parameters.meanDegree,
+                                 parameters.WattsStrogatz_rewiringProb,
+                                 parameters.numGames])
     print('done')
 
 
-ParameterSweep()
+parameter_sweep()

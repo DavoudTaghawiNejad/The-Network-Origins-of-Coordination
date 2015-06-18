@@ -1,1 +1,1 @@
-number of agents;average;coefficient of variation
+num_player, mean, var, series_instance.number_of_non_convergences, timeSteps, numStrategies, meanDegree, WattsStrogatz_rewiringProb, numGames
