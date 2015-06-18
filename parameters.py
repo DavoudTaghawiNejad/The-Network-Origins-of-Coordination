@@ -2,7 +2,7 @@
 from __future__ import division
 
 #number of time steps
-timeSteps=100000
+timeSteps=1000000
 
 #number of players
 numPlayers=100
