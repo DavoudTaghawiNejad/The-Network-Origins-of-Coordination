@@ -4,39 +4,41 @@ from __future__ import division
 import parameters
 import players2 as players
 import random
-import matplotlib.pyplot as plt
 import networkx as nx
-import copy
+import sys
 import numpy as np
 import scipy.stats
 import csv
 
 
-class do(object):
-    def __init__(self):
-        self.timeSteps = parameters.timeSteps
-        self.numStrategies = parameters.numStrategies
-        self.numPlayers = parameters.numPlayers
-        self.network = 0
-        self.playersList = []
+class SeriesInstance(object):
+    def __init__(self, num_states, num_players):
+        self.numStates = num_states
+        self.numPlayers = num_players
+        self.proportion_Players=parameters.proportion_Players
+        self.epsilon=parameters.epsilon
+        self.proportion = 1 - self.epsilon
+        self.players_every_round=0
         self.networkType = 'scaleFree'
-        self.meanDegree = parameters.meanDegree
+        self.playersList = []
         self.playerNetwork = 0
-        self.WattsStrogatz_rewiringProb = parameters.WattsStrogatz_rewiringProb
+        self.meanDegree = parameters.meanDegree
         self.systemState_measure_frequency = parameters.measureSystem_state_frequency
-        self.convergence_sequence = []
-        self.networkState=False
-        self.timeSteps_to_convergence=[]
+        self.timeSteps = parameters.timeSteps
         self.numGames=parameters.numGames
-
-
+        self.convergence_sequence = []
+        self.timeSteps_to_convergence=[]
+        self.converged=False
+        # proportion of players playing each state
+        self.states_dynamics=dict((i,[]) for i in range(self.numStates))
+        self.number_of_non_convergences = 0
     def createPlayers_list(self):
         self.playersList = [players.player() for count in xrange(self.numPlayers)]
 
     def assignAttributes(self):
-        strategies = list(range(0, self.numStrategies))
         for i in self.playersList:
-            i.strategies = strategies
+            i.numStates = self.numStates
+            i.state=random.choice(range(self.numStates))
 
     def createNetwork(self):
         tempList = []
@@ -44,129 +46,126 @@ class do(object):
             tempList.append((self.playersList.index(i), i))
             mapping = dict(tempList)
 
-            if self.networkType == 'scaleFree':
-                G = nx.barabasi_albert_graph(self.numPlayers, self.meanDegree)
-                #G = nx.watts_strogatz_graph(self.numPlayers, self.meanDegree,0.5)
-                self.playerNetwork = nx.relabel_nodes(G, mapping)
+        if self.networkType == 'scaleFree':
+            G = nx.barabasi_albert_graph(self.numPlayers, self.meanDegree)
+            #G = nx.watts_strogatz_graph(self.numPlayers, self.meanDegree,1)
+            self.playerNetwork = nx.relabel_nodes(G, mapping)
 
         for i in self.playersList:
             i.numberNeighbors = len(self.playerNetwork.neighbors(i))
 
+    def update_players_every_round(self):
+        a=int(self.numPlayers*self.proportion_Players)
+        if a%2==0:
+            return a
+        else:
+            return a - 1
 
-    def sampleTwo_players(self):
-        random.shuffle(self.playersList)
-        players=random.sample(self.playersList,2)
+
+    def sample_players(self):
+        players=random.sample(self.playersList,self.players_every_round)
         return players
 
-    def communicate(self,players):
+    def collect_neighbor_states(self,players):
         for i in players:
             neighbors = self.playerNetwork.neighbors(i)
-            neighborsStates = []
+            neighbors_states = []
             for j in neighbors:
-                state = j.returnState()
-                neighborsStates.append(state)
-            i.update_neighborsStates(neighborsStates)
+                state = j.state
+                neighbors_states.append(state)
+            i.update_neighbors_states(neighbors_states)
 
-    def compute(self,players):
+    def update_state(self,players):
         for i in players:
-            i.compute_conditional_probabilities()
+            i.update_state()
 
-    def returnMoves(self,players):
-        moves=[]
-        for i in players:
-            moves.append(i.returnMove())
-        return moves
-
-
-
-    def play(self):
-        players=self.sampleTwo_players()
-        self.communicate(players)
-        self.compute(players)
-        moves=self.returnMoves(players)
-
-        if moves[0]==moves[1]:
-            players[0].updateResult(1)
-            players[1].updateResult(1)
-        else:
-            players[0].updateResult(0)
-            players[1].updateResult(0)
-
-	#this part of the code is definately doing too much work because all we want to know if all agents have the same state
-	# as soon as we find two agents don't have same state we can exit , and keep running the code
-    def compute_stateNetwork(self):
-        states = [0] * self.numStrategies
+    def return_system_convergence(self):
+        states=[0]*self.numStates
         for i in self.playersList:
-            player_state = i.returnState()[0]
-            states[player_state]+=1
+            states[i.state]+=1
+        states=[x/self.numPlayers for x in states]
+        highest=max(states)
+        return highest
 
-        states_normalized = []
-        for i in states:
-            states_normalized.append(i / self.numPlayers)
+    def update_convergence_sequence(self):
+        a = self.return_system_convergence()
+        self.convergence_sequence.append(a)
 
-        if max(states_normalized)==1:
-            self.networkState=True
+    def is_converged(self):
+        return self.return_system_convergence() > self.proportion
 
-        #return states_normalized
 
-    def checkNetwork_convergence(self,state,count):
-        if count == (self.numPlayers):
-            return True
-        else:
-            if self.playersList[count].returnState()[0] == state:
-                count=count+1
-                return self.checkNetwork_convergence(state,count)
-            else:
+    def update_states_dynamics(self):
+        states=[0]*self.numStates
+        for i in self.playersList:
+            states[i.state]+=1
+        states=[x/self.numPlayers for x in states]
 
-                return False
+        for i in range(self.numStates):
+            self.states_dynamics[i].append(states[i])
+
+
+    def round(self):
+        players=self.sample_players()
+        self.collect_neighbor_states(players)
+        self.update_state(players)
+
 
     def game(self):
         self.createPlayers_list()
         self.assignAttributes()
         self.createNetwork()
-        self.networkState = 0
-        self.networkState=False
+        self.players_every_round = self.update_players_every_round()
+        for step in range(self.timeSteps):
+            self.round()
+            if step % self.systemState_measure_frequency == 0:
+                if self.is_converged():
+                    self.timeSteps_to_convergence.append(step)
+                    return
+        self.number_of_non_convergences += 1
 
-        for i in range(self.timeSteps):
-             if self.networkState is False:
-                 self.play()
-                 if i % self.systemState_measure_frequency == 0 and i<(self.timeSteps-1):
-                     #state=self.playersList[0].returnState()[0]
-                     #self.networkState=self.checkNetwork_convergence(state,0)
-                     self.compute_stateNetwork()
-                     if self.networkState is True:
-                         self.timeSteps_to_convergence.append(i)
-                 elif i==(self.timeSteps-1):
-                    self.timeSteps_to_convergence.append(False)
 
-    def games(self):
-        for i in range(self.numGames):
+    def run(self):
+        for _ in range(self.numGames):
             self.game()
 
+def parameter_sweep():
+    if sys.argv[1] == 's':
+        assert sys.argv[5] == 'p'
+        range_strategies = np.arange(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
+        range_players = [int(sys.argv[6])]
+    elif sys.argv[1] == 'p':
+        assert sys.argv[5] == 's'
+        range_players = np.arange(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
+        range_strategies = [int(sys.argv[6])]
+    else:
+        print("python main.py s 1 100 10 p 1000")
+        print("python main.py s from strategy to step p number of players")
+        print("python main.py p 1 10000 100 s 100")
+        print("python main.py p from number of players to step s number of strategies")
+        return
 
-
-#instanceDo = do()
-#instanceDo.games()
-
-
-#plt.plot(instanceDo.timeSteps_to_convergence)
-#plt.show()
-
-
-class parameter_sweep(object):
-    incrementPlayers=100
-    range_players=np.arange(90,91,incrementPlayers)
-    with open('data19.csv','wb') as csvfile:
-        for player in range_players:
-            print('players',player)
-            simulation_instance=do()
-            simulation_instance.numPlayers=player
-            simulation_instance.games()
-            mean=np.mean(simulation_instance.timeSteps_to_convergence)
-            var=scipy.stats.variation(simulation_instance.timeSteps_to_convergence)
-            writer=csv.writer(csvfile,delimiter=',')
-            writer.writerow([player]+[mean]+[var])
-    print 'done'
+    with open('data%s_%06d_%06d_%06d_%s_%06d.csv' % (
+               sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]),
+               sys.argv[5], int(sys.argv[6])), 'wb') as csvfile:
+        for num_players in range_players:
+            for num_states in range_strategies:
+                series_instance = SeriesInstance(num_states, num_players)
+                series_instance.run()
+                mean = np.mean(series_instance.timeSteps_to_convergence)
+                var = np.std(series_instance.timeSteps_to_convergence)
+                print('players: %d, strategies: %d, mean: %.0f, non convergences: %d' % (
+                    num_players, num_states, mean, series_instance.number_of_non_convergences))
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow([num_players, num_states, mean, var,
+                                 series_instance.number_of_non_convergences,
+                                 parameters.timeSteps,
+                                 parameters.measureSystem_state_frequency,
+                                 parameters.meanDegree,
+                                 parameters.numGames,
+                                 parameters.epsilon,
+                                 parameters.proportion_Players])
+    print('done')
 
 
 parameter_sweep()
