@@ -53,9 +53,6 @@ class SeriesInstance(object):
             #G = nx.watts_strogatz_graph(self.numPlayers, self.meanDegree,1)
             self.playerNetwork = nx.relabel_nodes(G, mapping)
 
-        for i in self.playersList:
-            i.numberNeighbors = len(self.playerNetwork.neighbors(i))
-
     def update_players_every_round(self):
         a = int(self.numPlayers * self.proportion_Players)
         if a % 2 == 0:

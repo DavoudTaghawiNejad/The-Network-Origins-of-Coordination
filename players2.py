@@ -5,7 +5,6 @@ import random
 # create a class of players
 class player(object):
     def __init__(self):
-        self.numberNeighbors = 0
         self.numStates = 0
         self.state = 0
         # how many neighbors have each of the possible states
@@ -19,6 +18,5 @@ class player(object):
     def update_state(self):
         m = max(self.frequency_neighborsStates)
         states = [i for i, x in enumerate(self.frequency_neighborsStates) if x == m]
-        state = random.choice(states)
-        self.state=state
+        self.state = random.choice(states)
 
