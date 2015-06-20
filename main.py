@@ -32,19 +32,21 @@ class SeriesInstance(object):
         # proportion of players playing each state
         self.states_dynamics=dict((i,[]) for i in range(self.numStates))
         self.number_of_non_convergences = 0
+
     def createPlayers_list(self):
+        """ creates players """
         self.playersList = [players.player() for count in xrange(self.numPlayers)]
 
     def assignAttributes(self):
-        for i in self.playersList:
-            i.numStates = self.numStates
-            i.state=random.choice(range(self.numStates))
+        """ every agent gets a number of options, to choose his nash strategy from """
+        for player in self.playersList:
+            player.numStates = self.numStates
+            player.state = random.choice(range(self.numStates))
 
     def createNetwork(self):
-        tempList = []
-        for i in self.playersList:
-            tempList.append((self.playersList.index(i), i))
-            mapping = dict(tempList)
+        """ self.playerNetwork, is a network of players, which refer to Player instances
+            every agent gets the number of his agents """
+        mapping = dict(enumerate(self.playersList))
 
         if self.networkType == 'scaleFree':
             G = nx.barabasi_albert_graph(self.numPlayers, self.meanDegree)
@@ -55,36 +57,36 @@ class SeriesInstance(object):
             i.numberNeighbors = len(self.playerNetwork.neighbors(i))
 
     def update_players_every_round(self):
-        a=int(self.numPlayers*self.proportion_Players)
-        if a%2==0:
+        a = int(self.numPlayers * self.proportion_Players)
+        if a % 2 == 0:
             return a
         else:
             return a - 1
 
 
     def sample_players(self):
-        players=random.sample(self.playersList,self.players_every_round)
-        return players
+        return random.sample(self.playersList, self.players_every_round)
 
-    def collect_neighbor_states(self,players):
-        for i in players:
-            neighbors = self.playerNetwork.neighbors(i)
+    def collect_neighbor_states(self, players):
+        """ each of the two players collects the states of his neighbors """
+        for player in players:
+            neighbors = self.playerNetwork.neighbors(player)
             neighbors_states = []
             for j in neighbors:
                 state = j.state
                 neighbors_states.append(state)
-            i.update_neighbors_states(neighbors_states)
+            player.update_neighbors_states(neighbors_states)
 
-    def update_state(self,players):
-        for i in players:
-            i.update_state()
+    def update_state(self, players):
+        for player in players:
+            player.update_state()
 
     def return_system_convergence(self):
-        states=[0]*self.numStates
-        for i in self.playersList:
-            states[i.state]+=1
-        states=[x/self.numPlayers for x in states]
-        highest=max(states)
+        states = [0] * self.numStates
+        for player in self.playersList:
+            states[player.state] += 1
+        states = [state / self.numPlayers for state in states]
+        highest = max(states)
         return highest
 
     def update_convergence_sequence(self):
@@ -96,10 +98,10 @@ class SeriesInstance(object):
 
 
     def update_states_dynamics(self):
-        states=[0]*self.numStates
+        states = [0] * self.numStates
         for i in self.playersList:
-            states[i.state]+=1
-        states=[x/self.numPlayers for x in states]
+            states[i.state] += 1
+        states = [x / self.numPlayers for x in states]
 
         for i in range(self.numStates):
             self.states_dynamics[i].append(states[i])
