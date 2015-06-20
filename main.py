@@ -9,6 +9,8 @@ import sys
 import numpy as np
 import scipy.stats
 import csv
+import zmq
+import json
 
 
 class SeriesInstance(object):
@@ -128,6 +130,24 @@ class SeriesInstance(object):
         for _ in range(self.numGames):
             self.game()
 
+def simulate_one_parameter_set(name, num_states, num_players):
+    series_instance = SeriesInstance(num_states, num_players)
+    series_instance.run()
+    mean = np.mean(series_instance.timeSteps_to_convergence)
+    var = np.std(series_instance.timeSteps_to_convergence)
+    print('players: %d, strategies: %d, mean: %.0f, non convergences: %d' % (
+    num_players, num_states, mean, series_instance.number_of_non_convergences))
+    with open(name, 'ab') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',')
+        writer.writerow([num_players, num_states, mean, var,
+                     series_instance.number_of_non_convergences,
+                     parameters.timeSteps,
+                     parameters.measureSystem_state_frequency,
+                     parameters.meanDegree,
+                     parameters.numGames,
+                     parameters.epsilon,
+                     parameters.proportion_Players])
+
 def parameter_sweep():
     if sys.argv[1] == 's':
         assert sys.argv[5] == 'p'
@@ -137,6 +157,8 @@ def parameter_sweep():
         assert sys.argv[5] == 's'
         range_players = np.arange(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
         range_strategies = [int(sys.argv[6])]
+    elif sys.argv[1] == 'z':
+        pass
     else:
         print("python main.py s 1 100 10 p 1000")
         print("python main.py s from strategy to step p number of players")
@@ -144,27 +166,51 @@ def parameter_sweep():
         print("python main.py p from number of players to step s number of strategies")
         return
 
-    with open('data%s_%06d_%06d_%06d_%s_%06d.csv' % (
-               sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]),
-               sys.argv[5], int(sys.argv[6])), 'wb') as csvfile:
+    if sys.argv[1] == 's' or sys.argv[1] == 'p':
+        name = 'final%s_%06d_%06d_%06d_%s_%06d.csv' % (
+                   sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]),
+                   sys.argv[5], int(sys.argv[6]))
         for num_players in range_players:
             for num_states in range_strategies:
-                series_instance = SeriesInstance(num_states, num_players)
-                series_instance.run()
-                mean = np.mean(series_instance.timeSteps_to_convergence)
-                var = np.std(series_instance.timeSteps_to_convergence)
-                print('players: %d, strategies: %d, mean: %.0f, non convergences: %d' % (
-                    num_players, num_states, mean, series_instance.number_of_non_convergences))
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow([num_players, num_states, mean, var,
-                                 series_instance.number_of_non_convergences,
-                                 parameters.timeSteps,
-                                 parameters.measureSystem_state_frequency,
-                                 parameters.meanDegree,
-                                 parameters.numGames,
-                                 parameters.epsilon,
-                                 parameters.proportion_Players])
-    print('done')
+                simulate_one_parameter_set(name, num_states, num_players)
+    elif sys.argv[1] == 'z':
 
+        offset = int(sys.argv[3])
+
+        address_task = 5557 + offset
+        address_result = 5558 + offset
+        address_kill = 5559 + offset
+
+        address_prefix = sys.argv[2]
+
+        print("address_prefix: %s, address_task: %d, address_result %d, address_kill: %d" % (
+            address_prefix, address_task, address_result, address_kill))
+
+        context = zmq.Context(1)
+
+        receiver = context.socket(zmq.REQ)
+        print("tcp://%s:%i" % (address_prefix, address_task))
+        receiver.connect("tcp://%s:%i" % (address_prefix, address_task))
+
+        sender = context.socket(zmq.PUSH)
+        sender.connect("tcp://%s:%i" % (address_prefix, address_result))
+
+
+        while True:
+            print("Receiving")
+            receiver.send("ready")
+            message = receiver.recv()
+            try:
+                param = json.loads(message)
+            except:
+                sender.send("message not parsed")
+            name = param['name']
+            num_players = int(param['num_players'])
+            num_states = int(param['num_states'])
+            print("Received and Working," , message)
+            simulate_one_parameter_set(name, num_states, num_players)
+            print("Worked and Send:")
+            sender.send(json.dumps({'finished': True}))
+    print('done')
 
 parameter_sweep()
