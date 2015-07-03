@@ -108,19 +108,19 @@ class SeriesInstance(object):
             self.states_dynamics[i].append(states[i])
 
     def draw_network(self, players, time):
-        plt.figure(1, figsize=(8,8))
+        plt.figure(1, figsize=(32, 18))
         # layout graphs with positions using graphviz neato
         pos = nx.graphviz_layout(self.playerNetwork, prog="neato")
         # color nodes the same in each connected subgraph
         nx.draw(self.playerNetwork,
              pos,
-             node_size=400,
+             node_size=[len(self.playerNetwork.neighbors(player)) * 100 for player in self.playerNetwork],
              node_color=[self.color[player.state] for player in self.playerNetwork],
              vmin=0.0,
              vmax=1.0,
              with_labels=False
              )
-        plt.savefig("movie_%1d.png" % time, dpi=75)
+        plt.savefig("movie_{0:05d}.png".format(time), dpi=75)
 
 
 
