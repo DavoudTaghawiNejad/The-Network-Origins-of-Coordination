@@ -1,6 +1,4 @@
-
 from __future__ import division
-
 import parameters
 import players2 as players
 import random
@@ -11,6 +9,9 @@ import scipy.stats
 import csv
 import zmq
 import json
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 
 class SeriesInstance(object):
@@ -53,6 +54,7 @@ class SeriesInstance(object):
         if self.networkType == 'scaleFree':
             G = nx.barabasi_albert_graph(self.numPlayers, self.meanDegree)
             #G = nx.watts_strogatz_graph(self.numPlayers, self.meanDegree,1)
+            #G = nx.grid_2d_graph(self.numPlayers, self.numPlayers, periodic=True)
             self.playerNetwork = nx.relabel_nodes(G, mapping)
 
     def update_players_every_round(self):
@@ -105,11 +107,30 @@ class SeriesInstance(object):
         for i in range(self.numStates):
             self.states_dynamics[i].append(states[i])
 
+    def draw_network(self, players, time):
+        plt.figure(1, figsize=(8,8))
+        # layout graphs with positions using graphviz neato
+        pos = nx.graphviz_layout(self.playerNetwork, prog="neato")
+        # color nodes the same in each connected subgraph
+        nx.draw(self.playerNetwork,
+             pos,
+             node_size=400,
+             node_color=[self.color[player.state] for player in self.playerNetwork],
+             vmin=0.0,
+             vmax=1.0,
+             with_labels=False
+             )
+        plt.savefig("movie_%1d.png" % time, dpi=75)
 
-    def round(self):
+
+
+    def round(self, time):
         players=self.sample_players()
         self.collect_neighbor_states(players)
         self.update_state(players)
+        if self.movie:
+            print time
+            self.draw_network(players, time)
 
 
     def game(self):
@@ -118,7 +139,7 @@ class SeriesInstance(object):
         self.createNetwork()
         self.players_every_round = self.update_players_every_round()
         for step in range(self.timeSteps):
-            self.round()
+            self.round(step)
             if step % self.systemState_measure_frequency == 0:
                 if self.is_converged():
                     self.timeSteps_to_convergence.append(step)
@@ -130,8 +151,10 @@ class SeriesInstance(object):
         for _ in range(self.numGames):
             self.game()
 
-def simulate_one_parameter_set(name, num_states, num_players):
+def simulate_one_parameter_set(name, num_states, num_players, movie=False, color=None):
     series_instance = SeriesInstance(num_states, num_players)
+    series_instance.movie = movie
+    series_instance.color = color
     series_instance.run()
     mean = np.mean(series_instance.timeSteps_to_convergence)
     var = np.std(series_instance.timeSteps_to_convergence)
@@ -140,15 +163,20 @@ def simulate_one_parameter_set(name, num_states, num_players):
     with open(name, 'ab') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
         writer.writerow([num_players, num_states, mean, var,
-                     series_instance.number_of_non_convergences,
-                     parameters.timeSteps,
-                     parameters.measureSystem_state_frequency,
-                     parameters.meanDegree,
-                     parameters.numGames,
-                     parameters.epsilon,
-                     parameters.proportion_Players])
+                         series_instance.number_of_non_convergences,
+                         parameters.timeSteps,
+                         parameters.measureSystem_state_frequency,
+                         parameters.meanDegree,
+                         parameters.numGames,
+                         parameters.epsilon,
+                         parameters.proportion_Players])
 
 def parameter_sweep():
+    if sys.argv[1] == 'm':
+        name = 'movie%s_%06d_%06d.csv' % (
+                sys.argv[1], int(sys.argv[2]), int(sys.argv[3]))
+        simulate_one_parameter_set(name, num_states=int(sys.argv[2]), num_players=int(sys.argv[3]), movie=True, color=sys.argv[4])
+
     if sys.argv[1] == 's':
         assert sys.argv[5] == 'p'
         range_strategies = np.arange(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
@@ -164,6 +192,8 @@ def parameter_sweep():
         print("python main.py s from strategy to step p number of players")
         print("python main.py p 1 10000 100 s 100")
         print("python main.py p from number of players to step s number of strategies")
+        print("python main.py m 3 10000 rgb")
+        print("python main.py m number_of_states number_of_players one_color_per_state")
         return
 
     if sys.argv[1] == 's' or sys.argv[1] == 'p':
