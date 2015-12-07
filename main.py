@@ -71,11 +71,7 @@ class SeriesInstance(object):
     def collect_neighbor_states(self, players):
         """ each of the two players collects the states of his neighbors """
         for player in players:
-            neighbors = self.playerNetwork.neighbors(player)
-            neighbors_states = []
-            for j in neighbors:
-                state = j.state
-                neighbors_states.append(state)
+            neighbors_states = [neighbor.state for neighbor in self.playerNetwork.neighbors(player)]
             player.update_neighbors_states(neighbors_states)
 
     def update_state(self, players):
@@ -83,12 +79,11 @@ class SeriesInstance(object):
             player.update_state()
 
     def return_system_convergence(self):
-        states = [0] * self.numStates
+        states = np.zeros(self.numStates, dtype=int)
         for player in self.playersList:
             states[player.state] += 1
-        states = [state / self.numPlayers for state in states]
-        highest = max(states)
-        return highest
+        states = states / self.numPlayers
+        return states.max()
 
     def update_convergence_sequence(self):
         a = self.return_system_convergence()
@@ -114,15 +109,14 @@ class SeriesInstance(object):
         # color nodes the same in each connected subgraph
         nx.draw(self.playerNetwork,
              pos,
-             node_size=[len(self.playerNetwork.neighbors(player)) * 100 for player in self.playerNetwork],
+             node_size=[len(self.playerNetwork.neighbors(player)) * 100
+                        for player in self.playerNetwork],
              node_color=[self.color[player.state] for player in self.playerNetwork],
              vmin=0.0,
              vmax=1.0,
              with_labels=False
              )
         plt.savefig("movie_{0:05d}.png".format(time), dpi=75)
-
-
 
     def round(self, time):
         players=self.sample_players()
