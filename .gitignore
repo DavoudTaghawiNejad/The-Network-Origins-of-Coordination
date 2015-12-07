@@ -2,3 +2,5 @@
 build/
 .gitignore
 *.pyc
+*.png
+*.mp4
