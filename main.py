@@ -7,7 +7,10 @@ import sys
 import numpy as np
 import scipy.stats
 import csv
-import zmq
+try:
+    import zmq
+except ImportError:
+    pass
 import json
 import matplotlib
 matplotlib.use('Agg')
@@ -18,8 +21,8 @@ class SeriesInstance(object):
     def __init__(self, num_states, num_players):
         self.numStates = num_states
         self.numPlayers = num_players
-        self.proportion_Players=parameters.proportion_Players
-        self.epsilon=parameters.epsilon
+        self.proportion_Players = parameters.proportion_Players
+        self.epsilon = parameters.epsilon
         self.proportion = 1 - self.epsilon
         self.players_every_round=0
         self.networkType = 'scaleFree'
@@ -28,10 +31,10 @@ class SeriesInstance(object):
         self.meanDegree = parameters.meanDegree
         self.systemState_measure_frequency = parameters.measureSystem_state_frequency
         self.timeSteps = parameters.timeSteps
-        self.numGames=parameters.numGames
+        self.numGames = parameters.numGames
         self.convergence_sequence = []
-        self.timeSteps_to_convergence=[]
-        self.converged=False
+        self.timeSteps_to_convergence = []
+        self.converged = False
         # proportion of players playing each state
         self.states_dynamics=dict((i,[]) for i in range(self.numStates))
         self.number_of_non_convergences = 0
@@ -50,12 +53,14 @@ class SeriesInstance(object):
         """ self.playerNetwork, is a network of players, which refer to Player instances
             every agent gets the number of his agents """
         mapping = dict(enumerate(self.playersList))
+        #G = nx.barabasi_albert_graph(self.numPlayers, self.meanDegree)
 
-        if self.networkType == 'scaleFree':
-            G = nx.barabasi_albert_graph(self.numPlayers, self.meanDegree)
-            #G = nx.watts_strogatz_graph(self.numPlayers, self.meanDegree,1)
-            #G = nx.grid_2d_graph(self.numPlayers, self.numPlayers, periodic=True)
-            self.playerNetwork = nx.relabel_nodes(G, mapping)
+        G = nx.watts_strogatz_graph(self.numPlayers, 2 * self.meanDegree, 0)
+        #G = nx.grid_2d_graph(self.numPlayers, self.numPlayers, periodic=True)
+        #G = nx.gnm_random_graph(self.numPlayers, 2 * self.numPlayers)
+        print 'mean degree', np.mean(G.degree().values())
+        print 'std degree', np.std(G.degree().values())
+        self.playerNetwork = nx.relabel_nodes(G, mapping)
 
     def update_players_every_round(self):
         a = int(self.numPlayers * self.proportion_Players)
